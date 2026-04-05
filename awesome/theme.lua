@@ -16,7 +16,7 @@ local my_table = awful.util.table or gears.table -- 4.{0,1} compatibility
 
 local theme                                     = {}
 theme.dir                                       = os.getenv("HOME") .. "/.config/awesome"
-theme.wallpaper                                 = theme.dir .. "/cat_leaves.png"
+theme.wallpaper                                 = theme.dir .. "/ship.png"
 theme.font                                      = "Terminus 9"
 theme.fg_normal                                 = "#FEFEFE"
 theme.fg_focus                                  = "#32D6FF"
@@ -78,7 +78,8 @@ theme.widget_task                               = theme.dir .. "/icons/task.png"
 --theme.widget_scissors                           = theme.dir .. "/icons/scissors.png"
 theme.tasklist_plain_task_name                  = true
 theme.tasklist_disable_icon                     = true
-theme.useless_gap                               = 0
+theme.useless_gap                               = 4
+theme.border_width                              = 2
 theme.titlebar_close_button_focus               = theme.dir .. "/icons/titlebar/close_focus.png"
 theme.titlebar_close_button_normal              = theme.dir .. "/icons/titlebar/close_normal.png"
 theme.titlebar_ontop_button_focus_active        = theme.dir .. "/icons/titlebar/ontop_focus_active.png"
@@ -128,30 +129,6 @@ lain.widget.contrib.task.attach(task, {
 })
 task:buttons(my_table.join(awful.button({}, 1, lain.widget.contrib.task.prompt)))
 
--- Scissors (xsel copy and paste)
---local scissors = wibox.widget.imagebox(theme.widget_scissors)
---scissors:buttons(my_table.join(awful.button({}, 1, function() awful.spawn.with_shell("xsel | xsel -i -b") end)))
-
--- Mail IMAP check
---[[ commented because it needs to be set before use
-local mailicon = wibox.widget.imagebox(theme.widget_mail)
-mailicon:buttons(my_table.join(awful.button({ }, 1, function () awful.spawn(mail) end)))
-theme.mail = lain.widget.imap({
-    timeout  = 180,
-    server   = "server",
-    mail     = "mail",
-    password = "keyring get mail",
-    settings = function()
-        if mailcount > 0 then
-            widget:set_text(" " .. mailcount .. " ")
-            mailicon:set_image(theme.widget_mail_on)
-        else
-            widget:set_text("")
-            mailicon:set_image(theme.widget_mail)
-        end
-    end
-})
---]]
 
 -- ALSA volume
 theme.volume = lain.widget.alsabar({
@@ -159,39 +136,6 @@ theme.volume = lain.widget.alsabar({
     notification_preset = { font = "Terminus 10", fg = theme.fg_normal },
 })
 
--- MPD
---local musicplr = awful.util.terminal .. " -title Music -g 130x34-320+16 -e ncmpcpp"
---local mpdicon = wibox.widget.imagebox(theme.widget_music)
---mpdicon:buttons(my_table.join(
---    awful.button({ modkey }, 1, function () awful.spawn.with_shell(musicplr) end),
---    awful.button({ }, 1, function ()
---        os.execute("mpc prev")
---        theme.mpd.update()
---    end),
---    awful.button({ }, 2, function ()
---        os.execute("mpc toggle")
---        theme.mpd.update()
---    end),
---    awful.button({ }, 3, function ()
---        os.execute("mpc next")
---        theme.mpd.update()
---    end)))
---theme.mpd = lain.widget.mpd({
---    settings = function()
---        if mpd_now.state == "play" then
---            artist = " " .. mpd_now.artist .. " "
---            title  = mpd_now.title  .. " "
---            mpdicon:set_image(theme.widget_music_on)
---            widget:set_markup(markup.font(theme.font, markup("#FF8466", artist) .. " " .. title))
---        elseif mpd_now.state == "pause" then
---            widget:set_markup(markup.font(theme.font, " mpd paused "))
---            mpdicon:set_image(theme.widget_music_pause)
---        else
---            widget:set_text("")
---            mpdicon:set_image(theme.widget_music)
---        end
---    end
---})
 
 -- MEM
 local memicon = wibox.widget.imagebox(theme.widget_mem)
@@ -209,50 +153,7 @@ local cpu = lain.widget.cpu({
     end
 })
 
---[[ Coretemp (lm_sensors, per core)
-local tempwidget = awful.widget.watch({awful.util.shell, '-c', 'sensors | grep Core'}, 30,
-function(widget, stdout)
-    local temps = ""
-    for line in stdout:gmatch("[^\r\n]+") do
-        temps = temps .. line:match("+(%d+).*°C")  .. "° " -- in Celsius
-    end
-    widget:set_markup(markup.font(theme.font, " " .. temps))
-end)
---]]
--- Coretemp (lain, average)
---local temp = lain.widget.temp({
---    settings = function()
---        widget:set_markup(markup.font(theme.font, " " .. coretemp_now .. "°C "))
---    end
---})
-----]]
---local tempicon = wibox.widget.imagebox(theme.widget_temp)
---
---local tempwidget = awful.widget.watch({awful.util.shell, '-c', 'date | awk '{print $4, $5}''}, 10,
---function(widget, stdout)
---    local temps = ""
---    for line in stdout:gmatch("[^\r\n]+") do
---        temps = temps .. line:match("+(%d+).*°C")  .. "° " -- in Celsius
---    end
---    widget:set_markup(markup.font(theme.font, " " .. temps))
---end)
---]]
--- Coretemp (lain, average)
---local temp = lain.widget.temp({
---    settings = function()
---        widget:set_markup(markup.font(theme.font, " " .. coretemp_now .. "°C "))
---    end
--- / fs
 local fsicon = wibox.widget.imagebox(theme.widget_hdd)
---[[ commented because it needs Gio/Glib >= 2.54
-theme.fs = lain.widget.fs({
-    notification_preset = { fg = theme.fg_normal, bg = theme.bg_normal, font = "Terminus 10" },
-    settings = function()
-        local fsp = string.format(" %3.2f %s ", fs_now["/"].free, fs_now["/"].units)
-        widget:set_markup(markup.font(theme.font, fsp))
-    end
-})
---]]
 
 -- Battery
 local baticon = wibox.widget.imagebox(theme.widget_battery)
@@ -348,10 +249,10 @@ function theme.at_screen_connect(s)
                            awful.button({}, 4, function () awful.layout.inc( 1) end),
                            awful.button({}, 5, function () awful.layout.inc(-1) end)))
     -- Create a taglist widget
-    --s.mytaglist = awful.widget.taglist(s, awful.widget.taglist.filter.all, awful.util.taglist_buttons)
+    s.mytaglist = awful.widget.taglist(s, awful.widget.taglist.filter.all, awful.util.taglist_buttons)
 
     -- Create a tasklist widget
-    --s.mytasklist = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, awful.util.tasklist_buttons)
+    s.mytasklist = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, awful.util.tasklist_buttons)
 
     -- Create the wibox
     s.mywibox = awful.wibar({ position = "top", screen = s, height = dpi(45), bg = theme.bg_normal, fg = theme.fg_normal })

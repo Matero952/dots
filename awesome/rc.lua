@@ -444,6 +444,8 @@ globalkeys = mytable.join(
     awful.key({ }, "XF86MonBrightnessDown", function () os.execute("xbacklight -dec 10") end,
               {description = "-10%", group = "hotkeys"}),
 
+    awful.key({modkey, }, "v", function () os.execute("vivaldi & disown") end,
+              {description = "spawn vivaldi browser", group = "hotkeys"}),
     -- ALSA volume control
     awful.key({ altkey }, "Up",
         function ()
